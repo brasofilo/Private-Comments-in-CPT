@@ -1,7 +1,7 @@
 ![FLI logo](https://github.com/brasofilo/featured-link-image/raw/master/logo.png)
 
-# Private Comments for CPT when Editing Drafts or Pendings posts
-Enables internal comments for a given Custom Post Type.
+# Private Comments for CPT
+Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
 
 ## Description
 Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12615).
