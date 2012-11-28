@@ -6,6 +6,11 @@ Enables internal comments for a given Custom Post Type.
 ## Description
 Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12615).
 
+## Screenshots
+![All Comments](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-1.png)
+![Private Comments](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-2.png)
+![Editing CPT](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-3.png)
+
 ## Installation
 ### Requirements
 * WordPress version 3.4 and later (not tested in previous versions)
