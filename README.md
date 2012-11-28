@@ -7,8 +7,13 @@ Enables internal comments for a given Custom Post Type when Editing Draft or Pen
 Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12615).
 
 ## Screenshots
+###All comments screen - Custom column - Custom background
 ![All Comments](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-1.png)
+
+###Private comments screen - No custom column - No custom background
 ![Private Comments](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-2.png)
+
+###Editing a Draft CPT
 ![Editing CPT](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/screenshot-3.png)
 
 ## Installation
