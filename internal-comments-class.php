@@ -265,7 +265,7 @@ class InternalComments
 			( $diff_status == self::$other_exclude ) 
 			? $commentdata['comment_karma'] 
 			: 3;
-loga($commentdata);
+
 		$comment_id = wp_new_comment( $commentdata );
 		$comment = get_comment($comment_id);
 		if ( ! $comment ) wp_die( 1 );
