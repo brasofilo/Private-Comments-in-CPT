@@ -1,80 +1,23 @@
 <?php
 ! defined( 'ABSPATH' ) AND exit;
 /*
-Plugin Name: 	Private Comments for a CPT Being Edited as Draft of Pending
-Plugin URI: 	https://github.com/brasofilo/multisite-site-category
-Description: 	Add a custom meta option when registering new sites in WordPress Multisite.
-Author: 		Rodolfo Buaiz
-Author URI: 	http://rodbuaiz.com/
-Version: 		2012.11.25.01
-License: 		GPL
+Plugin Name: Private Comments for CPT
+Plugin URI: https://github.com/brasofilo/Private-Comments-in-CPT
+Description: Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
+Author: Rodolfo Buaiz
+Author URI: http://rodbuaiz.com/
+Version: 2012.11.30.02
+License: GPL
 */
-
-/**
- * REFERENCES
- http://core.trac.wordpress.org/browser/tags/3.4.2/wp-admin/includes/ajax-actions.php#L719
- http://wordpress.org/support/topic/using-comment_type-field-for-my-own-purposes
- http://wordpress.stackexchange.com/q/39784/12615
- http://wordpress.stackexchange.com/q/56652/12615
- http://wordpress.stackexchange.com/q/61072/12615
- http://wordpress.stackexchange.com/q/63422/12615
- http://wordpress.stackexchange.com/q/64973/12615
- http://wordpress.stackexchange.com/q/72210/12615
- http://wordpress.stackexchange.com/q/74018/12615
- http://stackoverflow.com/q/4054943/1287812
-*/
-
-
-/* HELPER CPT */
-add_action( 'init', 'create_my_post_types' );
-function create_my_post_types() {
-	$labels = array(
-    'name' => _x('Books', 'post type general name', 'your_text_domain'),
-    'singular_name' => _x('Book', 'post type singular name', 'your_text_domain'),
-    'add_new' => _x('Add New', 'book', 'your_text_domain'),
-    'add_new_item' => __('Add New Book', 'your_text_domain'),
-    'edit_item' => __('Edit Book', 'your_text_domain'),
-    'new_item' => __('New Book', 'your_text_domain'),
-    'all_items' => __('All Books', 'your_text_domain'),
-    'view_item' => __('View Book', 'your_text_domain'),
-    'search_items' => __('Search Books', 'your_text_domain'),
-    'not_found' =>  __('No books found', 'your_text_domain'),
-    'not_found_in_trash' => __('No books found in Trash', 'your_text_domain'), 
-    'parent_item_colon' => '',
-    'menu_name' => __('Books', 'your_text_domain')
-
-  );
-  $args = array(
-    'labels' => $labels,
-    'public' => true,
-    'publicly_queryable' => true,
-    'show_ui' => true, 
-    'show_in_menu' => true, 
-    'query_var' => true,
-    'rewrite' => array( 'slug' => _x( 'book', 'URL slug', 'your_text_domain' ) ),
-    'capability_type' => 'post',
-    'has_archive' => true, 
-    'hierarchical' => false,
-    'menu_position' => null,
-    'supports' => array( 'title', 'editor', 'comments' )
-  );
-	register_post_type( 'portfolio', $args );
-}
-
-
-  /***************************************************************************************
- ***************************************************************************************
-**************************************************************************************/
 
 InternalComments::load();
-
 
 class InternalComments 
 {
 
-    static $cpt = 'portfolio'; // Where to run
+    static $cpt = 'portfolio'; // Custom Post Type
     
-	static $cpt_include = array( 'draft', 'pending' );
+	static $cpt_include = array( 'draft', 'pending' ); // Where to enable the comments
     
     static $cpt_exclude = array( 'trash' ); // Deny only if cpt comment in trash
     
