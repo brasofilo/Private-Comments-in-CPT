@@ -1,7 +1,7 @@
 <?php
 ! defined( 'ABSPATH' ) AND exit;
 /*
-Plugin Name: 	Multisite Site Category
+Plugin Name: 	Private Comments for a CPT Being Edited as Draft of Pending
 Plugin URI: 	https://github.com/brasofilo/multisite-site-category
 Description: 	Add a custom meta option when registering new sites in WordPress Multisite.
 Author: 		Rodolfo Buaiz
@@ -84,10 +84,12 @@ class InternalComments
 
     static function load() 
 	{
-        add_action( 'admin_init', array( __CLASS__, 'init_admin'));
+		add_action( 'admin_init', array( __CLASS__, 'text_domain' ) );
+
+        add_action( 'admin_init', array( __CLASS__, 'init_admin') );
 
 		if( !is_admin() )
-        	add_action( 'init', array( __CLASS__, 'init_front'));
+        	add_action( 'init', array( __CLASS__, 'init_front') );
     }
 
     static function init_admin() 
@@ -106,6 +108,23 @@ class InternalComments
     static function init_front() 
 	{
 		add_filter( 'comments_array', array( __CLASS__, 'remove_karmic_comments' ), 20, 2 );
+	}
+	
+	static function text_domain()
+	{
+	    $domain = 'iccpt';
+	    // The "plugin_locale" filter is also used in load_plugin_textdomain()
+	    $locale = apply_filters( 'plugin_locale', get_locale(), $domain );
+
+	    load_textdomain( 
+	            $domain, 
+	            WP_LANG_DIR . '/internal-comments/' . $domain . '-' . $locale . '.mo' 
+	    );
+	    load_plugin_textdomain( 
+	            $domain, 
+	            FALSE, 
+	            dirname( plugin_basename(__FILE__) ) . '/languages/' 
+	    );
 	}
 	
 	/**
@@ -159,12 +178,26 @@ class InternalComments
 
 		if( isset( $_GET['internal_messages'] ) ) 
 		{
-			$status_links['all'] = '<a href="edit-comments.php?comment_status=all">All</a>';
-			$status_links['internal_messages'] = '<a href="edit-comments.php?comment_status=all&internal_messages=1" class="current" style="margin-leff:60px">Internal Comments <span class="count">('.$count.')</a></span>';
+			$status_links['all'] = 
+				'<a href="edit-comments.php?comment_status=all">' 
+				. __('All') 
+				. '</a>';
+				
+			$status_links['internal_messages'] = 
+				'<a href="edit-comments.php?comment_status=all&internal_messages=1" class="current" style="margin-leff:60px">' 
+				. __( 'Internal Comments', 'iccpt' ) 
+				. ' <span class="count">('
+				. $count
+				. ')</a></span>';
 		} 
 		else 
 		{
-			$status_links['internal_messages'] = '<a href="edit-comments.php?comment_status=all&internal_messages=1" style="margin-leff:60px">Internal Comments  <span class="count">('.$count.')</span></a>';
+			$status_links['internal_messages'] = 
+				'<a href="edit-comments.php?comment_status=all&internal_messages=1" style="margin-leff:60px">' 
+				. __( 'Internal Comments', 'iccpt' ) 
+				. '  <span class="count">('
+				. $count
+				. ')</span></a>';
 		}
 
 		return $status_links;
@@ -202,7 +235,7 @@ class InternalComments
 		if ( empty( $status ) )
 			wp_die( 1 );
 		elseif ( in_array( $status, $diff_status ) )
-			wp_die( __('ERROR: you are replying to a comment on a draft post.') );
+			wp_die( __('ERROR: you are replying to a comment on a draft post.', 'iccpt' ) );
 
 		$user = wp_get_current_user();
 		if ( $user->exists() ) {
@@ -218,11 +251,11 @@ class InternalComments
 				}
 			}
 		} else {
-			wp_die( __( 'Sorry, you must be logged in to reply to a comment.' ) );
+			wp_die( __( 'Sorry, you must be logged in to reply to a comment.', 'iccpt' ) );
 		}
 
 		if ( '' == $comment_content )
-			wp_die( __( 'ERROR: please type a comment.' ) );
+			wp_die( __( 'ERROR: please type a comment.', 'iccpt' ) );
 
 		$comment_parent = absint($_POST['comment_ID']);
 		$comment_auto_approved = false;
@@ -296,7 +329,7 @@ loga($commentdata);
 		{
             add_meta_box(
                 'commentsdiv' 
-            ,   __('Offline Comments')
+            ,   __( 'Offline Comments', 'iccpt' )
             ,   'post_comment_meta_box'
             ,   self::$cpt
             ,   'normal' 
@@ -357,7 +390,7 @@ loga($commentdata);
 	}
 	static function wpse_64973_add_columns( $cols )
 	{
-	    $cols[self::$row_id] = __( 'Internal Comments', 'wpse_64973' );
+	    $cols[self::$row_id] = __( 'Internal Comments', 'iccpt' );
 	    return $cols;
 	}
 	static function wpse_64973_column_cb( $col, $comment_id )
@@ -376,3 +409,116 @@ loga($commentdata);
 } /* end class */
 
 
+
+// http://wordpress.stackexchange.com/questions/25910
+if ( ! class_exists('InternalCommentsInit' ) ) :
+/**
+ * This class triggers functions that run during activation/deactivation & uninstallation
+ */
+class InternalCommentsInit
+{
+    // Set this to true to get the state of origin, so you don't need to always uninstall during development.
+    const STATE_OF_ORIGIN = false;
+
+
+    function __construct( $case = false )
+    {
+        if ( ! $case )
+            wp_die( 'Busted! You should not call this class directly', 'Doing it wrong!' );
+
+        switch( $case )
+        {
+            case 'activate' :
+                add_action( 'init', array( &$this, 'activate_cb' ) );
+                break;
+
+            case 'deactivate' : 
+                add_action( 'init', array( &$this, 'deactivate_cb' ) );
+                break;
+
+            case 'uninstall' : 
+                add_action( 'init', array( &$this, 'uninstall_cb' ) );
+                break;
+        }
+    }
+
+    /**
+     * Set up tables, add options, etc. - All preparation that only needs to be done once
+     */
+    function on_activate()
+    {
+        new InternalCommentsInit( 'activate' );
+    }
+
+    /**
+     * Do nothing like removing settings, etc. 
+     * The user could reactivate the plugin and wants everything in the state before activation.
+     * Take a constant to remove everything, so you can develop & test easier.
+     */
+    function on_deactivate()
+    {
+        $case = 'deactivate';
+        if ( STATE_OF_ORIGIN )
+            $case = 'uninstall';
+
+        new InternalCommentsInit( $case );
+    }
+
+    /**
+     * Remove/Delete everything - If the user wants to uninstall, then he wants the state of origin.
+     * 
+     * Will be called when the user clicks on the uninstall link that calls for the plugin to uninstall itself
+     */
+    function on_uninstall()
+    {
+        // important: check if the file is the one that was registered with the uninstall hook (function)
+        if ( __FILE__ != WP_UNINSTALL_PLUGIN )
+            return;
+
+        new InternalCommentsInit( 'uninstall' );
+    }
+
+    function activate_cb()
+    {
+        // Stuff like adding default option values to the DB
+        wp_die( '<h1>This is run on <code>init</code> during activation.</h1>', 'Activation hook example' );
+    }
+
+    function deactivate_cb()
+    {
+        // if you need to output messages in the 'admin_notices' field, do it like this:
+        $this->error( "Some message.<br />" );
+        // if you need to output messages in the 'admin_notices' field AND stop further processing, do it like this:
+        $this->error( "Some message.<br />", TRUE );
+        // Stuff like remove_option(); etc.
+        wp_die( '<h1>This is run on <code>init</code> during deactivation.</h1>', 'Deactivation hook example' );
+    }
+
+    function uninstall_cb()
+    {
+        // Stuff like delete tables, etc.
+        wp_die( '<h1>This is run on <code>init</code> during uninstallation</h1>', 'Uninstallation hook example' );
+    }
+    /**
+     * trigger_error()
+     * 
+     * @param (string) $error_msg
+     * @param (boolean) $fatal_error | catched a fatal error - when we exit, then we can't go further than this point
+     * @param unknown_type $error_type
+     * @return void
+     */
+    function error( $error_msg, $fatal_error = false, $error_type = E_USER_ERROR )
+    {
+        if( isset( $_GET['action'] ) && 'error_scrape' == $_GET['action'] ) 
+        {
+            echo "{$error_msg}\n";
+            if ( $fatal_error )
+                exit;
+        }
+        else 
+        {
+            trigger_error( $error_msg, $error_type );
+        }
+    }
+}
+endif;
