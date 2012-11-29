@@ -1,5 +1,5 @@
 # Private Comments for CPT
-Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
+Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts. The comments are only visible in the backend. And are marked as internal in the dashboard.
 
 ## Description
 Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12615).
