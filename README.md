@@ -1,3 +1,5 @@
+![MTT logo](https://raw.github.com/brasofilo/Private-Comments-in-CPT/master/logo.png)
+
 # Private Comments for CPT
 Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts. The comments are only visible in the backend. And marked as internal in the dashboard.
 
