@@ -5,7 +5,7 @@ Plugin Name: Private Comments for CPT
 Plugin URI: https://github.com/brasofilo/Private-Comments-in-CPT
 Description: Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
 Author: Rodolfo Buaiz
-Author URI: http://rodbuaiz.com/
+Author URI: https://rodbuaiz.com/
 Version: 2021.12.14.01
 License: GPL
 */
@@ -45,7 +45,8 @@ class InternalComments
 		add_action( 'manage_comments_custom_column', array( __CLASS__, 'wpse_64973_column_cb' ), 10, 2 );
     }
 
-	public function is_iccpt( $comment_post_ID = null ) {
+	public function is_iccpt( $comment_post_ID = null )
+	{
 		// Allow cpts to be filtered
 		$cpt = apply_filters( 'internal_comments_cpt', array( 'portfolio' ) );
 		return in_array( get_post_type($comment_post_ID), $cpt, true );
@@ -107,10 +108,12 @@ class InternalComments
 		$count = count( 
 			$wpdb->get_results( 
 				$wpdb->prepare( 
-					"SELECT comment_ID FROM $wpdb->comments 
-					WHERE comment_karma = '3' 
-					AND comment_approved != 'trash'" 
-				) 
+					"SELECT comment_ID FROM $wpdb->comments
+					WHERE comment_karma = %d 
+					AND comment_approved != %s",
+					3,
+					'trash'
+				)
 			) 
 		);
 
@@ -147,6 +150,7 @@ class InternalComments
 	 * /wp-admin/includes/ajax-actions.php
 	 *
 	 * Adjust the CPT that defines $diff_status 
+	 * TODO: permissions should be cpt caps and defined in a plugin settings page
 	 */
 	static function ajax_replyto_comment( $action ) 
 	{
@@ -294,7 +298,7 @@ class InternalComments
 	   return $comments;
 	}
 	
-	
+	//TODO: this should be moved to external files / plugin options page
 	static function karma_row_bg_color()
 	{
 		if( isset( $_GET['internal_messages'] ) )
@@ -305,7 +309,7 @@ class InternalComments
 	                //$('.inner-msgs-span').parent().parent().css('background-color','#858585').fadeTo('slow', 1);
 					$('.inner-msgs-span').parent().parent().fadeTo('fast', .3, function()
 					{
-					    $(this).css('background-color', '#858585');
+					    $(this).css('background-color', '#E3E3E3');
 					}).fadeTo('slow', 1);
 	            });     
 	        </script>
