@@ -48,7 +48,7 @@ class InternalComments
 	public function is_iccpt( $comment_post_ID = null ) {
 		// Allow cpts to be filtered
 		$cpt = apply_filters( 'internal_comments_cpt', array( 'portfolio' ) );
-		return in_array( $comment_post_ID, $cpt, true );
+		return in_array( get_post_type($comment_post_ID), $cpt, true );
 	}
 
     static function init_front() 
