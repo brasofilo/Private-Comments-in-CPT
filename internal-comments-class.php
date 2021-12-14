@@ -6,17 +6,14 @@ Plugin URI: https://github.com/brasofilo/Private-Comments-in-CPT
 Description: Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
 Author: Rodolfo Buaiz
 Author URI: http://rodbuaiz.com/
-Version: 2012.11.30.02
+Version: 2021.12.14.01
 License: GPL
 */
 
 InternalComments::load();
 
 class InternalComments 
-{
-
-    static $cpt = 'portfolio'; // Custom Post Type
-    
+{    
 	static $cpt_include = array( 'draft', 'pending' ); // Where to enable the comments
     
     static $cpt_exclude = array( 'trash' ); // Deny only if cpt comment in trash
@@ -48,26 +45,24 @@ class InternalComments
 		add_action( 'manage_comments_custom_column', array( __CLASS__, 'wpse_64973_column_cb' ), 10, 2 );
     }
 
+	public function is_iccpt( $comment_post_ID = null ) {
+		// Allow cpts to be filtered
+		$cpt = apply_filters( 'internal_comments_cpt', array( 'portfolio' ) );
+		return in_array( $comment_post_ID, $cpt, true );
+	}
+
     static function init_front() 
 	{
 		add_filter( 'comments_array', array( __CLASS__, 'remove_karmic_comments' ), 20, 2 );
 	}
-	
+
 	static function text_domain()
 	{
-	    $domain = 'iccpt';
-	    // The "plugin_locale" filter is also used in load_plugin_textdomain()
-	    $locale = apply_filters( 'plugin_locale', get_locale(), $domain );
-
-	    load_textdomain( 
-	            $domain, 
-	            WP_LANG_DIR . '/internal-comments/' . $domain . '-' . $locale . '.mo' 
-	    );
-	    load_plugin_textdomain( 
-	            $domain, 
-	            FALSE, 
-	            dirname( plugin_basename(__FILE__) ) . '/languages/' 
-	    );
+		load_plugin_textdomain( 
+				'iccpt', 
+				FALSE, 
+				dirname( plugin_basename(__FILE__) ) . '/languages/' 
+		);
 	}
 	
 	/**
@@ -170,7 +165,7 @@ class InternalComments
 
 		$status = $wpdb->get_var( $wpdb->prepare( "SELECT post_status FROM $wpdb->posts WHERE ID = %d", $comment_post_ID ) );
 
-		if( self::$cpt == get_post_type( $comment_post_ID ) )
+		if( !empty($comment_post_ID) && self::is_iccpt($comment_post_ID) )
 			$diff_status = self::$cpt_exclude;
 		else
 			$diff_status = self::$other_exclude;
@@ -274,7 +269,7 @@ class InternalComments
                 'commentsdiv' 
             ,   __( 'Offline Comments', 'iccpt' )
             ,   'post_comment_meta_box'
-            ,   self::$cpt
+            ,   apply_filters( 'internal_comments_cpt', array( 'portfolio' ) )
             ,   'normal' 
             ,   'core'
             );
