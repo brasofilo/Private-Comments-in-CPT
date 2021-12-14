@@ -24,8 +24,14 @@ Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12
 * WordPress version 3.4 and later (not tested with previous versions)
 
 ## Installation
- - Adjust the CPT name in the class
- - Or use `helper-cpt.php` to create a testing post type
+ - Add your CPTs using a filter like so:
+```
+add_filter( 'internal_comments_cpt', 'my_ic_cpts');
+function my_ic_cpts( $cpt_arr ){
+	return array('some_cpt_slug', 'some_other_cpt_slug');
+}
+```
+ - use `helper-cpt.php` to create a test post type
 
 ## Other Notes
 ### References
