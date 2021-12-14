@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Private-Comments-in-CPT\n"
 "POT-Creation-Date: 2021-12-14 21:15+0100\n"
-"PO-Revision-Date: 2021-12-14 21:24+0100\n"
+"PO-Revision-Date: 2021-12-14 21:41+0100\n"
 "Last-Translator: \n"
 "Language-Team: Twinpictures\n"
 "Language: de\n"
@@ -75,7 +75,7 @@ msgstr "Interne Kommentare"
 
 #: internal-comments-class.php:176
 msgid "ERROR: you are replying to a comment on a draft post."
-msgstr "ERROR: Beitragsentwürfe unterstützen keine Kommentarantworten. "
+msgstr "Ereignisse im Entwurfsmodus unterstützen keine Kommentarantworten"
 
 #: internal-comments-class.php:192
 msgid "Sorry, you must be logged in to reply to a comment."
