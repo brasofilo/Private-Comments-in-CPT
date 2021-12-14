@@ -2,6 +2,11 @@
 
 # Private Comments for CPT
 Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts. The comments are only visible in the backend. And marked as internal in the dashboard.
+* Contributors: brasofilo, baden03
+* Stable tag: 2021.12.14.01
+* Tested up to: 5.9
+* License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html) or later
+* License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 ## Description
 Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12615).
@@ -24,14 +29,14 @@ Based on this [WordPress Question](http://wordpress.stackexchange.com/q/74018/12
 * WordPress version 3.4 and later (not tested with previous versions)
 
 ## Installation
- - Add your CPTs using a filter like so:
+ - Define the custom post types using the `internal_comments_cpt` filter:
 ```
 add_filter( 'internal_comments_cpt', 'my_ic_cpts');
 function my_ic_cpts( $cpt_arr ){
 	return array('some_cpt_slug', 'some_other_cpt_slug');
 }
 ```
- - use `helper-cpt.php` to create a test post type
+ - The `helper-cpt.php` can be used to create a test post type
 
 ## Other Notes
 ### References
@@ -47,5 +52,3 @@ function my_ic_cpts( $cpt_arr ){
  - http://stackoverflow.com/q/4054943/1287812
 
 ### Admin style of screenshots: https://github.com/toscho/T5-Clean-Admin
-### Licence
-Released under GPL, you can use it free of charge on your personal or commercial blog.
