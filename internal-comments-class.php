@@ -2,63 +2,58 @@
 ! defined( 'ABSPATH' ) AND exit;
 /*
 Plugin Name: Private Comments for CPT
-Plugin URI: https://github.com/brasofilo/Private-Comments-in-CPT
+Plugin URI: https://github.com/baden03/Private-Comments-in-CPT
 Description: Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
-Author: Rodolfo Buaiz
+Author: Rodolfo Buaiz, Twinpictures
 Author URI: https://rodbuaiz.com/
-Version: 2021.12.14.01
+Version: 2023.01.25.01
 License: GPL
 */
 
-InternalComments::load();
-
-class InternalComments 
-{    
-	static $cpt_include = array( 'draft', 'pending' ); // Where to enable the comments
+class InternalComments {    
+	private $cpt_include = array( 'draft', 'pending' ); // Where to enable the comments
     
-    static $cpt_exclude = array( 'trash' ); // Deny only if cpt comment in trash
+    private $cpt_exclude = array( 'trash' ); // Deny only if cpt comment in trash
     
-    static $other_exclude = array('draft','pending','trash'); // Deny to the rest of post_types
+    private $other_exclude = array('draft','pending','trash'); // Deny to the rest of post_types
     
-	static $row_id = 'inner_msgs';
+	private $row_id = 'inner_msgs';
 
-    static function load() 
-	{
-		add_action( 'admin_init', array( __CLASS__, 'text_domain' ) );
+	public function __construct() {
+		add_action( 'admin_init', array( $this, 'text_domain' ) );
+        add_action( 'admin_init', array( $this, 'init_admin') );
+		/*
+		if (!is_admin()) {
+			add_action( 'init', array( $this, 'init_front') );
+		}
+		*/
+        	
+	}
+	
 
-        add_action( 'admin_init', array( __CLASS__, 'init_admin') );
+    function init_admin(){
+        add_action( 'current_screen', array(  $this, 'exclude_lazy_hook' ), 10, 2 );
+		add_action( 'wp_ajax_replyto-comment', array( $this, 'ajax_replyto_comment' ), 0 );
 
-		if( !is_admin() )
-        	add_action( 'init', array( __CLASS__, 'init_front') );
+		if( isset( $_GET['post'] ) ){
+			$this->add_comment_metabox();
+		}
+		add_action( 'admin_footer-edit-comments.php', array( $this, 'karma_row_bg_color' ) );
+		add_action( 'load-edit-comments.php', array( $this, 'wpse_64973_load' ) );
+		add_action( 'manage_comments_custom_column', array( $this, 'wpse_64973_column_cb' ), 10, 2 );
     }
 
-    static function init_admin() 
-	{
-        add_action( 'current_screen', array(  __CLASS__, 'exclude_lazy_hook' ), 10, 2 );
-		add_action( 'wp_ajax_replyto-comment', array( __CLASS__, 'ajax_replyto_comment' ), 0 );
-
-		if( isset( $_GET['post'] ) ) 
-			self::add_comment_metabox();
-			
-		add_action( 'admin_footer-edit-comments.php', array( __CLASS__, 'karma_row_bg_color' ) );
-		add_action( 'load-edit-comments.php', array( __CLASS__, 'wpse_64973_load' ) );
-		add_action( 'manage_comments_custom_column', array( __CLASS__, 'wpse_64973_column_cb' ), 10, 2 );
-    }
-
-	public function is_iccpt( $comment_post_ID = null )
-	{
+	function is_iccpt( $comment_post_id = null ){
 		// Allow cpts to be filtered
 		$cpt = apply_filters( 'internal_comments_cpt', array( 'portfolio' ) );
-		return in_array( get_post_type($comment_post_ID), $cpt, true );
+		return in_array( get_post_type($comment_post_id), $cpt, true );
 	}
 
-    static function init_front() 
-	{
-		add_filter( 'comments_array', array( __CLASS__, 'remove_karmic_comments' ), 20, 2 );
+    function init_front() {
+		add_filter( 'comments_array', array( $this, 'remove_karmic_comments' ), 20, 2 );
 	}
 
-	static function text_domain()
-	{
+	function text_domain(){
 		load_plugin_textdomain( 
 				'iccpt', 
 				FALSE, 
@@ -72,16 +67,15 @@ class InternalComments
 	 * @param object $screen
 	 * @return void
 	 **/
-	static function exclude_lazy_hook( $screen )
-	{
-	    if ( $screen->id != 'edit-comments' )
+	function exclude_lazy_hook( $screen ){
+		if ($screen->id != 'edit-comments') {
 			return;
-
+		}
 		// Check if our Query Var is defined	
-		if( isset( $_GET['internal_messages'] ) )
-			add_action( 'pre_get_comments', array( __CLASS__, 'list_only_internal_messages' ), 10, 1 );
-
-		add_filter( 'comment_status_links', array( __CLASS__, 'link_to_internal_messages' ) );
+		if (isset($_GET['internal_messages'])) {
+			add_action( 'pre_get_comments', array( $this, 'list_only_internal_messages' ), 10, 1 );
+		}
+		add_filter( 'comment_status_links', array( $this, 'link_to_internal_messages' ) );
 	}
 	
     /**
@@ -90,9 +84,9 @@ class InternalComments
 	 * @param integer $cols
 	 * @return object WP_Comment_Query
 	 **/
-	static function list_only_internal_messages( $clauses )
-	{
+	function list_only_internal_messages( $clauses ){
 		$clauses->query_vars['karma'] = 3;
+		return $clauses;
 	}
 
 
@@ -102,8 +96,7 @@ class InternalComments
 	 * @param integer $cols
 	 * @return integer
 	 **/
-	static function link_to_internal_messages( $status_links )
-	{
+	function link_to_internal_messages( $status_links ){
 		global $wpdb;
 		$count = count( 
 			$wpdb->get_results( 
@@ -117,8 +110,7 @@ class InternalComments
 			) 
 		);
 
-		if( isset( $_GET['internal_messages'] ) ) 
-		{
+		if( isset( $_GET['internal_messages'] ) ) {
 			$status_links['all'] = 
 				'<a href="edit-comments.php?comment_status=all">' 
 				. __('All') 
@@ -131,8 +123,7 @@ class InternalComments
 				. $count
 				. ')</a></span>';
 		} 
-		else 
-		{
+		else {
 			$status_links['internal_messages'] = 
 				'<a href="edit-comments.php?comment_status=all&internal_messages=1" style="margin-leff:60px">' 
 				. __( 'Internal Comments', 'iccpt' ) 
@@ -152,12 +143,11 @@ class InternalComments
 	 * Adjust the CPT that defines $diff_status 
 	 * TODO: permissions should be cpt caps and defined in a plugin settings page
 	 */
-	static function ajax_replyto_comment( $action ) 
-	{
+	function ajax_replyto_comment( $action ) {
 		global $wp_list_table, $wpdb;
 
-		$comment_post_ID = absint( $_POST['comment_post_ID'] );
-		if ( !current_user_can( 'edit_post', $comment_post_ID ) )
+		$comment_post_id = (int) $_POST['comment_post_ID'];
+		if ( !current_user_can( 'edit_post', $comment_post_id ) )
 			wp_die( -1 );
 
 		if ( empty( $action ) )
@@ -167,12 +157,13 @@ class InternalComments
 
 		set_current_screen( 'edit-comments' );
 
-		$status = $wpdb->get_var( $wpdb->prepare( "SELECT post_status FROM $wpdb->posts WHERE ID = %d", $comment_post_ID ) );
+		$status = $wpdb->get_var( $wpdb->prepare( "SELECT post_status FROM $wpdb->posts WHERE ID = %d", $comment_post_id ) );
 
-		if( !empty($comment_post_ID) && self::is_iccpt($comment_post_ID) )
-			$diff_status = self::$cpt_exclude;
+		if( !empty($comment_post_id) && $this->is_iccpt($comment_post_id) )
+			$diff_status = $this->cpt_exclude;
 		else
-			$diff_status = self::$other_exclude;
+			$diff_status = $this->other_exclude;
+
 
 		if ( empty( $status ) )
 			wp_die( 1 );
@@ -180,11 +171,13 @@ class InternalComments
 			wp_die( __('ERROR: you are replying to a comment on a draft post.', 'iccpt' ) );
 
 		$user = wp_get_current_user();
+		
 		if ( $user->exists() ) {
-			$user_ID = $user->ID;
-			$comment_author       = $wpdb->escape( $user->display_name );
-			$comment_author_email = $wpdb->escape( $user->user_email );
-			$comment_author_url   = $wpdb->escape( $user->user_url );
+			$comment_author       = wp_slash( $user->display_name );
+			$comment_author_email = wp_slash( $user->user_email );
+			$comment_author_url   = wp_slash( $user->user_url );
+			$user_id              = $user->ID;
+
 			$comment_content      = trim( $_POST['content'] );
 			if ( current_user_can( 'unfiltered_html' ) ) {
 				if ( wp_create_nonce( 'unfiltered-html-comment' ) != $_POST['_wp_unfiltered_html_comment'] ) {
@@ -192,28 +185,47 @@ class InternalComments
 					kses_init_filters(); // set up the filters
 				}
 			}
-		} else {
+		}
+		else {
 			wp_die( __( 'Sorry, you must be logged in to reply to a comment.', 'iccpt' ) );
 		}
 
-		if ( '' == $comment_content )
+		if ( '' == $comment_content ){
 			wp_die( __( 'ERROR: please type a comment.', 'iccpt' ) );
+		}	
 
 		$comment_parent = absint($_POST['comment_ID']);
 		$comment_auto_approved = false;
-		$commentdata = compact('comment_post_ID', 'comment_author', 'comment_author_email', 'comment_author_url', 'comment_content', 'comment_type', 'comment_parent', 'user_ID');
+
+		//$commentdata = compact('comment_post_ID', 'comment_author', 'comment_author_email', 'comment_author_url', 'comment_content', 'comment_type', 'comment_parent', 'user_ID');
+		$commentdata = array(
+			'comment_post_ID' => $comment_post_id,
+		);
+	
+		$commentdata += compact(
+			'comment_author',
+			'comment_author_email',
+			'comment_author_url',
+			'comment_content',
+			'comment_type',
+			'comment_parent',
+			'user_id'
+		);
 
 		$commentdata['comment_karma'] = 
-			( $diff_status == self::$other_exclude ) 
+			( $diff_status == $this->other_exclude ) 
 			? $commentdata['comment_karma'] 
 			: 3;
 
 		$comment_id = wp_new_comment( $commentdata );
 		$comment = get_comment($comment_id);
-		if ( ! $comment ) wp_die( 1 );
+		if (!$comment) {
+			wp_die( 1 );
+		}
 
-		if( !in_array( 'draft', $diff_status ) ) 
-			update_comment_meta( $comment_id, self::$row_id, 'yes' );
+		if (!in_array('draft', $diff_status)) {
+			update_comment_meta( $comment_id, $this->row_id, 'yes' );
+		}
 
 		$position = ( isset($_POST['position']) && (int) $_POST['position'] ) ? (int) $_POST['position'] : '-1';
 
@@ -221,9 +233,10 @@ class InternalComments
 		if ( !empty($_POST['approve_parent']) ) {
 			$parent = get_comment( $comment_parent );
 
-			if ( $parent && $parent->comment_approved === '0' && $parent->comment_post_ID == $comment_post_ID ) {
-				if ( wp_set_comment_status( $parent->comment_ID, 'approve' ) )
+			if ( $parent && $parent->comment_approved === '0' && $parent->comment_post_ID == $comment_post_id ) {
+				if ( wp_set_comment_status( $parent->comment_ID, 'approve' ) ){
 					$comment_auto_approved = true;
+				}	
 			}
 		}
 
@@ -231,10 +244,12 @@ class InternalComments
 			if ( 'dashboard' == $_REQUEST['mode'] ) {
 				require_once( ABSPATH . 'wp-admin/includes/dashboard.php' );
 				_wp_dashboard_recent_comments_row( $comment );
-			} else {
+			} 
+			else {
 				if ( 'single' == $_REQUEST['mode'] ) {
 					$wp_list_table = _get_list_table('WP_Post_Comments_List_Table');
-				} else {
+				} 
+				else {
 					$wp_list_table = _get_list_table('WP_Comments_List_Table');
 				}
 				$wp_list_table->single_row( $comment );
@@ -249,8 +264,9 @@ class InternalComments
 			'position' => $position
 		);
 
-		if ( $comment_auto_approved )
+		if ($comment_auto_approved) {
 			$response['supplemental'] = array( 'parent_approved' => $parent->comment_ID );
+		}
 
 		$x = new WP_Ajax_Response();
 		$x->add( $response );
@@ -263,11 +279,11 @@ class InternalComments
 	 *
 	 * @return void
 	 */
-	static function add_comment_metabox()
+	function add_comment_metabox()
 	{
 		$post_id = absint( $_GET['post'] ); 
         $post = get_post( $post_id ); 
-        if ( in_array( $post->post_status, self::$cpt_include ) )
+        if ( in_array( $post->post_status, $this->cpt_include ) )
 		{
             add_meta_box(
                 'commentsdiv' 
@@ -288,8 +304,7 @@ class InternalComments
 	 * @param int	 $post_id
 	 * @return object
 	 **/
-	static function remove_karmic_comments( $comments, $post_id )
-	{
+	function remove_karmic_comments( $comments, $post_id ){
 	   foreach ( $comments as $index => $c )
 	   {
 	       if ( $c->comment_karma == 3 )
@@ -299,8 +314,7 @@ class InternalComments
 	}
 	
 	//TODO: this should be moved to external files / plugin options page
-	static function karma_row_bg_color()
-	{
+	function karma_row_bg_color(){
 		if( isset( $_GET['internal_messages'] ) )
 			return;
 	    ?>
@@ -322,25 +336,21 @@ class InternalComments
 	Author URI. http://pmg.co/people/chris
 	License. MIT
 	*/
-	static function wpse_64973_load()
-	{
-		if( isset( $_GET['internal_messages'] ) )
+	function wpse_64973_load(){
+		if (isset($_GET['internal_messages'])) {
 			return;
+		}
 	    $screen = get_current_screen();
-
-	    add_filter( "manage_{$screen->id}_columns", array( __CLASS__, 'wpse_64973_add_columns' ) );
+	    add_filter( "manage_{$screen->id}_columns", array( $this, 'wpse_64973_add_columns' ) );
 	}
-	static function wpse_64973_add_columns( $cols )
-	{
-	    $cols[self::$row_id] = __( 'Internal Comments', 'iccpt' );
+	function wpse_64973_add_columns( $cols ){
+	    $cols[$this->row_id] = __( 'Internal Comments', 'iccpt' );
 	    return $cols;
 	}
-	static function wpse_64973_column_cb( $col, $comment_id )
-	{
-	    switch( $col )
-	    {
-	        case self::$row_id:
-	            if( 'yes' == get_comment_meta( $comment_id, self::$row_id, true ) )
+	function wpse_64973_column_cb( $col, $comment_id ){
+	    switch( $col ){
+	        case $this->row_id:
+	            if( 'yes' == get_comment_meta( $comment_id, $this->row_id, true ) )
 	            {
 	                echo '<span style="color:#f00;font-size:7em;line-height:.5em;margin-left:15%" class="inner-msgs-span"><sub>&#149;</sub></span>';
 	            }
@@ -349,7 +359,7 @@ class InternalComments
 	} /* end plugin */
 	
 } /* end class */
-
+$WP_InternalComments = new InternalComments;
 
 
 // http://wordpress.stackexchange.com/questions/25910
