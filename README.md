@@ -3,8 +3,8 @@
 # Private Comments for CPT
 Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts. The comments are only visible in the backend. And marked as internal in the dashboard.
 * Contributors: brasofilo, baden03
-* Stable tag: 2021.12.14.01
-* Tested up to: 5.9
+* Stable tag: 2023.01.25.01
+* Tested up to: 6.1.1
 * License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html) or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
