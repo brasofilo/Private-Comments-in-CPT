@@ -6,7 +6,7 @@ Plugin URI: https://github.com/brasofilo/Private-Comments-in-CPT
 Description: Enables internal comments for a given Custom Post Type when Editing Draft or Pending posts.
 Author: Rodolfo Buaiz, Twinpictures
 Author URI: https://rodbuaiz.com/
-Version: 2024.01.23.01
+Version: 2023.01.25.02
 License: GPL
 */
 
